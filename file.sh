@@ -6,7 +6,7 @@ clear
 echo "			Welcome to our DBMS"
 function mainMenu {
        
-	echo "		Main Menu Choose what you want to do 🤔️"
+	echo "		Main Menu Choose what you want to do "
 	echo " "
         select ch in " Create Database" " List Databases" " Connect to Database" " Drop Database"  " Exit"
         do
