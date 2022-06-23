@@ -3,7 +3,7 @@
 mkdir DBMS 
 cd DBMS
 clear
-echo "			Welcome to our DBMS"
+echo "			Welcome to our DBMS xD"
 function mainMenu {
        
 	echo "		Main Menu Choose what you want to do "
