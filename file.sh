@@ -3,7 +3,7 @@
 mkdir DBMS 
 cd DBMS
 clear
-echo "			Welcome to our DBMS 🤗️😊️"
+echo "			Welcome to our DBMS"
 function mainMenu {
        
 	echo "		Main Menu Choose what you want to do 🤔️"
@@ -49,7 +49,7 @@ function ConnetDatabase {
 	echo " "
         read -p "Enter Database Name you want to connect ➡️  " dbName
         
-        if [ -d $dbName ]
+        if [ -d -n $dbName 2> /dev/null ]
         then
                 cd $dbName
                 clear;
