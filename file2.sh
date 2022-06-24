@@ -23,7 +23,7 @@ function mainMenu {
 }
 
 function validate() {
-	if [ $1 -ne " " 2> /dev/null ]; then
+	if [[ $1 =~ \  ]]; then
 		return 0
 	else 
    		return 1
