@@ -22,61 +22,89 @@ function mainMenu {
         done
 }
 
+function validate() {
+	if [ $1 -ne " " 2> /dev/null ]; then
+		return 0
+	else 
+   		return 1
+  	fi
+}
+
 function CreateDatabase {
 	echo " "
 	read -p "Database Name: " dbName;
 
-	if [ -d $dbName ]
-	then
-		echo "Database name already exists";
-		echo " "
-        	mainMenu
-	else 
-		 if [[ $dbName =~ [a-zA-Z] ]]
-		 then
-			mkdir $dbName
-		 	echo "Database $dbName created successfully";
-		     	echo " "
-		 	mainMenu
-		 else
-			echo "Syntax error, it contains an illegal character"
-		     	echo " "
-		 	mainMenu
-		 fi
-	fi
-	
+	if validate $dbName;
+	then        	
+		if [ -d $dbName ]
+		then
+			echo "Database name already exists";
+			echo " "
+			mainMenu
+		else 
+			 if [[ $dbName =~ [a-zA-Z] ]]
+			 then
+				mkdir $dbName
+			 	echo "Database $dbName created successfully";
+			     	echo " "
+			 	mainMenu
+			 else
+				echo "Syntax error, it contains an illegal character"
+			     	echo " "
+			 	mainMenu
+			 fi
+		fi
+	else
+                echo "Syntax error, not valid input";
+                echo " "
+                mainMenu
+        fi
 }
 
 function ConnetDatabase {
 	echo " "
         read -p "Enter database name want to connect: " dbName
         
-        if [ -d $dbName ]
-        then
-                cd $dbName
-                clear;
-		echo "Connected to $dbName successfully"
-		echo " "
-		tableMenu
+	if validate $dbName;
+	then        
+		if [ -d $dbName ]
+		then
+		        cd $dbName
+		        clear;
+			echo "Connected to $dbName successfully"
+			echo " "
+			tableMenu
+		else
+		 	echo "Database doesn't exists";
+		 	echo " "
+			mainMenu
+		fi
         else
-         	echo "Database doesn't exists";
-         	echo " "
-		mainMenu
-	fi
+                echo "Syntax error, not valid input";
+                echo " "
+                mainMenu
+        fi
 }
 
 function DropDatabase {
 	echo " "
         read -p "Enter database name want to drop: " dbName
 
-        if [ -d $dbName ]
-        then
-                rm -r $dbName
-                echo "Database $dbName dropped successfully"
-                echo " "
-		mainMenu
+	if validate $dbName;
+	then        
+		if [ -d $dbName ]
+	 	then
+			rm -r $dbName
+			echo "Database $dbName dropped successfully"
+			echo " "
+			mainMenu
+		else
+		        echo "Database doesn't exists";
+		        echo " "
+		        mainMenu
+		fi	
         else
-                echo "Database doesn't exists";
+                echo "Syntax error, not valid input";
                 echo " "
                 mainMenu
         fi
@@ -89,8 +117,8 @@ function tableMenu {
 	echo " "
 	select ch in "List Tables" "Create Table" "Drop Table" "Insert into Table" "Select from Table " "Delete from Table" "Update Table" "Exit to Main Menu"
 	do
-		  case $REPLY in
-   		        1)  ls; echo " "; tableMenu;;
+		case $REPLY in
+   			1)  ls; echo " "; tableMenu;;
    	 		2)  createTable;;
 	 		3)  Drop-Table;;
    	 		4)  insert;;
@@ -99,7 +127,7 @@ function tableMenu {
    	 		7)  updateTable;;
     	 		8)  cd -; clear; mainMenu;;
     	 		*)  echo " "; tableMenu;
-  	 		esac
+  	 	esac
 	done
 }
 
