@@ -1,105 +1,107 @@
-#! /bin/bash
+#!/bin/bash
 
 mkdir DBMS 
 cd DBMS
 clear
-echo "			Welcome to our DBMS 🤗️😊️"
+
 function mainMenu {
-       
-	echo "		Main Menu Choose what you want to do 🤔️"
+	echo "======================================================="
+	echo "     Bash Shell Script Database Management System"
+	echo "======================================================="
 	echo " "
-        select ch in " Create Database" " List Databases" " Connect to Database" " Drop Database"  " Exit"
+        select ch in "Create Database" "List Databases" "Connect to Database" "Drop Database" "Exit"
         do
                   case $REPLY in
                         1)  CreateDatabase;;
-                        2)  ls ; echo " "; mainMenu ;;
-                        3)  ConnetDatabase ;;
-                        4)  DropDatabase ;;
-			5) exit ;;
-                        *) echo " Wrong Choice 🤬️👊️ " ; mainMenu;
+                        2)  ls; echo " "; mainMenu;;
+                        3)  ConnetDatabase;;
+                        4)  DropDatabase;;
+                        5)  clear; exit;;
+                        *)  echo " "; mainMenu;;
                         esac
         done
 }
 
 function CreateDatabase {
-echo " "
-	read -p "Enter Database Name ➡️  " dbName;
+	echo " "
+	read -p "Database Name: " dbName;
 
 	if [ -d $dbName ]
 	then
-		echo "Database already exists ✋️ ";
+		echo "Database name already exists";
 		echo " "
         	mainMenu
-	else
-		mkdir $dbName
-	if [[ $? == 0 ]]
-        then
-             echo "Your Database  $dbName Created Successfully 👍️";
-             	echo " "
-             mainMenu
-         else
-         echo "Something Wrong Please Try Again ⚠️";
-         mainMenu
-         fi
-
+	else 
+		 if [[ $dbName =~ [a-zA-Z] ]]
+		 then
+			mkdir $dbName
+		 	echo "Database $dbName created successfully";
+		     	echo " "
+		 	mainMenu
+		 else
+			echo "Syntax error, it contains an illegal character"
+		     	echo " "
+		 	mainMenu
+		 fi
 	fi
 	
 }
+
 function ConnetDatabase {
 	echo " "
-        read -p "Enter Database Name you want to connect ➡️  " dbName
+        read -p "Enter database name want to connect: " dbName
         
-        if [ -d $dbName 2> /dev/null ]
+        if [ -d $dbName ]
         then
                 cd $dbName
                 clear;
-		echo "you are now connected to $dbName ✅️"
+		echo "Connected to $dbName successfully"
 		echo " "
 		tableMenu
         else
-         	 echo "Database doesn't exists 🤬️👊️";
-         	 echo " "
-		 mainMenu
+         	echo "Database doesn't exists";
+         	echo " "
+		mainMenu
 	fi
 }
+
 function DropDatabase {
 	echo " "
-        read -p "Enter Database Name you want to drop ➡️  " dbName
+        read -p "Enter database name want to drop: " dbName
 
         if [ -d $dbName ]
         then
                 rm -r $dbName
-                echo "Database $dbName dropped successfully ✅️"
-                	echo " "
+                echo "Database $dbName dropped successfully"
+                echo " "
 		mainMenu
         else
-                 echo "Database doesn't exists 🤬️👊️";
-                 	echo " "
-                 mainMenu
+                echo "Database doesn't exists";
+                echo " "
+                mainMenu
         fi
 }
 
-
 function tableMenu {
-	echo "		Table Menu Choose what you want to do 🤔️"
+	echo "======================================================="
+	echo "     Table Menu Database Management System"
+	echo "======================================================="
 	echo " "
-	select ch in " List All Exsisting Table" " Create Table" " Drop Table" " Insert into Table" " Select From Table " " Delete From Table" " Update Table" " Exit" " Query"
+	select ch in "List Tables" "Create Table" "Drop Table" "Insert into Table" "Select from Table " "Delete from Table" "Update Table" "Exit to Main Menu"
 	do
 		  case $REPLY in
-   		        1)  ls ; echo " "; tableMenu ;;
-   	 		2)  createTable ;;
-	 		3)  Drop-Table ;;
-   	 		4)  insert ;;
-   	 		5)  clear; selectMenu ;;
+   		        1)  ls; echo " "; tableMenu;;
+   	 		2)  createTable;;
+	 		3)  Drop-Table;;
+   	 		4)  insert;;
+   	 		5)  clear; selectMenu;;
    	 		6)  deleteFromTable;;
    	 		7)  updateTable;;
-    	 		8)  cd -; clear; mainMenu ;;
-			9) Query ;;   	 		
-			*) echo " Wrong Choice 🤬️👊️" ; tableMenu;
+    	 		8)  cd -; clear; mainMenu;;
+    	 		*)  echo " "; tableMenu;
   	 		esac
 	done
 }
-
 
 function createTable {
 read -p "Enter Table Name ➡️  " TableName
