@@ -23,10 +23,10 @@ function mainMenu {
 }
 
 function validate() {
-	if [[ $1 =~ \  ]]; then
-		return 0
+	if [ -z $1 ]; then
+		return 1
 	else 
-   		return 1
+   		return 0
   	fi
 }
 
