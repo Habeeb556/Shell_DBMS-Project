@@ -10,7 +10,7 @@ function mainMenu {
 	echo "     Bash Shell Script - Database Management System    "
 	echo "======================================================="
 	echo " "
-        select ch in "Create Database" "List Databases" "Connect to Database" "Drop Database" "Exit"
+        select x in "Create Database" "List Databases" "Connect to Database" "Drop Database" "Exit"
         do
                   case $REPLY in
                         1)  CreateDatabase;;
@@ -117,7 +117,7 @@ function tableMenu {
 	echo "     Table Menu for Database Management System             "
 	echo "======================================================="
 	echo " "
-	select ch in "List Tables" "Create Table" "Drop Table" "Insert into Table" "Select from Table " "Delete from Table" "Update Table" "Exit to Main Menu" "Query Table"
+	select x in "List Tables" "Create Table" "Drop Table" "Insert into Table" "Select from Table " "Delete from Table" "Update Table" "Exit to Main Menu" "Query Table"
 	do
 		case $REPLY in
    			1)  ls; echo " "; tableMenu;;
@@ -134,56 +134,68 @@ function tableMenu {
 	done
 }
 
-function createTable {
-	read -p "Enter Table Name ➡️  " TableName
+function validateType() {
+	if [ -z $1 ]; then
+		return 1
+	else 
+   		return 0
+  	fi
+}
 
-	if [ -f $TableName ]
-	then
-		echo "Table already exists 👀️";
-		tableMenu
-	else
-	    read -p "Enter Number Of Column ➡️  " col
-	    counter=1
-	    seperator=":"
-	    rowSep="\n"
-	    pKey=""
-	    columns="Field"$seperator"Type"$seperator"Key"
-	    while [ $counter -le $col ]
-	    do
-		    read -p "Enter Column $counter Name ➡️  " colName
-	 
-		    echo "Enter the type of Column $counter"
-		    select t in " Int" " String" 
-		    do
-			    case $REPLY in
-				    1) colType="int"; break ;;
-				    2) colType="str"; break;;
-				    *) echo "wrong choice 🤬️👊️"; break;;
-			    esac
-		    done
-		    if [[ $pKey == "" ]]
-		    then
-			    echo "Do You need Make Praimary Key 🔑️"
-			    select p in " Yes" " No"
-			    do
-				    case $REPLY in
-					    1) 			 		pKey="PK";columns+=$rowSep$colName$seperator$colType$seperator$pKey;
-						    break;;
-					    2) columns+=$rowSep$colName$seperator$colType$seperator;
-						    break;;
-					    *) echo "Wrong Choice 🤬️👊️"; 
-						    break;;
-				    esac
-			    done
-		    else
-		    	columns+=$rowSep$colName$seperator$colType$seperator ;
-		    fi
-		    if [[ $counter == $col ]]
-		    then
-			    temp=$temp$colName
-		    else
-			    temp=$temp$colName$seperator
-		    fi
+
+function createTable {
+	read -p "Table Name: " TableName
+
+	if validate $TableName;
+	then        
+		if [ -f $TableName ]
+		then
+			echo "Table name already exists";
+			tableMenu
+		else
+			read -p "Number of Columns: " col
+			counter=1
+			seperator=":"
+			rowSep="\n"
+			pKey=""
+		 	columns="Field"$seperator"Type"$seperator"Key"
+			while [ $counter -le $col ]
+		 	do
+				read -p "Enter column $counter name: " colName
+		 
+				echo "Enter the type of Column $counter"
+				select t in " Int" " String" 
+				do
+					case $REPLY in
+						1) colType="int"; break ;;
+						2) colType="str"; break;;
+						*) echo "wrong choice 🤬️👊️"; break;;
+					esac
+			done
+			if [[ $pKey == "" ]]
+			then
+				echo "Do You need Make Praimary Key 🔑️"
+				select p in " Yes" " No"
+				do
+					case $REPLY in
+						1) pKey="PK";columns+=$rowSep$colName$seperator$colType$seperator$pKey;
+							break;;
+						2) columns+=$rowSep$colName$seperator$colType$seperator;
+							break;;
+						*) echo "Wrong Choice 🤬️👊️"; 
+							break;;
+					esac
+				 done
+			 else
+			    	columns+=$rowSep$colName$seperator$colType$seperator ;
+			 fi
+	 		 
+			 if [[ $counter == $col ]]
+			 	then
+					temp=$temp$colName
+			 	else
+					temp=$temp$colName$seperator
+			 fi
 		
 		    ((counter++))
 
@@ -204,11 +216,16 @@ function createTable {
 		    echo "Something Wrong Please Try Again ⚠️";
 		    tableMenu
 	    fi
-	fi    
+	fi
+	        else
+                echo "Syntax error, not valid input";
+                echo " "
+                tableMenu
+        fi    
 }
 
 function Drop-Table {
-	read -p "Enter Table Name ➡️  " TableName
+	read -p "Table name: " TableName
 
 	if [ -f $TableName ]
 	then
@@ -240,9 +257,9 @@ function insert {
 			
 			if [[ $colType == "int" ]]
 			then
-				while  [[ $data =~ ^[a-z]*$ ]]
+				while  [[ $data =~ ^[[:alpha:]]+$ ]]
 				do
-					echo "invalid input Type 🤬️👊️";
+					echo "Syntax error, invalid input type";
 					read -p "$colName ($colType) = " data
 				done
 			fi
@@ -284,13 +301,95 @@ function insert {
 	fi
 }
 
+function deleteFromTable {
+	read -p"Enter Table Name ➡️  " TableName
+	  
+	if [ -f $TableName ]
+	then
+		read -p "Enter Column Name ➡️  " colName
+		ColNum=$(awk -F":"  'NR==1{
+
+			for (i=1 ; i<=NF ;i++){
+		        	if( $i == "'$colName'" ){
+		                	print i
+		                }
+			}
+		}' $TableName)
+
+		#echo $ColNum
+		if [[ $ColNum == "" ]]
+		then
+			echo "Column not found 😥️";
+			tableMenu;
+		else
+			#set -x
+			read -p "Enter Condition Value ➡️ "  val
+			Res=`awk -F":" '{        
+				if( $'$ColNum' == "'$val'" )
+					print $'$ColNum'
+			}' $TableName`
+		fi
+		
+		#echo $Res
+		if [[ $Res == "" ]]
+		then
+			echo "value not found 😥️";
+			tableMenu;
+		else
+			NUMR=`awk -F":" 'BEGIN{NumR=0}{ 
+				if( $'$ColNum' == "'$val'"){
+					print NR
+				}		      
+		 	} ' $TableName`
+		 	count=0
+
+		 	for i in $NUMR
+		 	do
+		 		sed -i ''$(($i-$count))'d' $TableName
+		 		echo "Row Deleted Successfully 👍️";
+		 		((count++)) 	
+		 	done
+			tableMenu
+		fi
+  	else
+		echo "Table Not Exist 🤬️👊️";
+        	tableMenu ;
+  	fi
+}
+
+function updateTable {
+	read -p "Table name: " TableName
+ 
+	read -p "Row number: " rowNum
+	let "rowNum += 1"
+	read -p "Column name: " colName
+
+	ColNum=` awk -F":" 'NR==1 {for(i=1;i<=NF;i++)
+	{
+		if( $i == "'$colName'" )
+		print i
+	} 
+	}' $TableName`
+
+	Val=` awk -F":" 'NR=='$rowNum' {print $'$ColNum'}' $TableName`
+	echo $Val
+
+	read -p "Enter new value: " newValue
+	
+	sed -i -r 's/'$Val'/'$newValue'/g' $TableName
+	echo "Row updated successfully from $Val to $newValue"	 		
+	echo " "
+	tableMenu
+}
+
+
 ## 3rd-Menu
 function selectMenu {
 	echo "======================================================="
 	echo "     Select Menu for Database Management System        "
 	echo "======================================================="
 	echo " "
-	select c in "Select all" "Select Specific Column in Table" "Select from Table with condition" "Back to Table Menu" "Back to Main Menu"
+	select x in "Select all" "Select Specific Column in Table" "Select from Table with condition" "Back to Table Menu" "Back to Main Menu"
 	do
 		case $REPLY in 
 			1) selectAll; break;;
@@ -378,108 +477,6 @@ function selectCondition {
 	  	echo "Table Not Found 😥️"
 		selectMenu
 	  fi    
-}
-
-
-function deleteFromTable {
-	read -p"Enter Table Name ➡️  " TableName
-	  
-	if [ -f $TableName ]
-	then
-		read -p "Enter Column Name ➡️  " colName
-		ColNum=$(awk -F":"  'NR==1{
-
-			for (i=1 ; i<=NF ;i++){
-		        	if( $i == "'$colName'" ){
-		                	print i
-		                }
-			}
-		}' $TableName)
-
-		#echo $ColNum
-		if [[ $ColNum == "" ]]
-		then
-			echo "Column not found 😥️";
-			tableMenu;
-		else
-			#set -x
-			read -p "Enter Condition Value ➡️ "  val
-			Res=`awk -F":" '{        
-				if( $'$ColNum' == "'$val'" )
-					print $'$ColNum'
-			}' $TableName`
-		fi
-		
-		#echo $Res
-		if [[ $Res == "" ]]
-		then
-			echo "value not found 😥️";
-			tableMenu;
-		else
-			NUMR=`awk -F":" 'BEGIN{NumR=0}{ 
-				if( $'$ColNum' == "'$val'"){
-					print NR
-				}		      
-		 	} ' $TableName`
-		 	count=0
-
-		 	for i in $NUMR
-		 	do
-		 		sed -i ''$(($i-$count))'d' $TableName
-		 		echo "Row Deleted Successfully 👍️";
-		 		((count++)) 	
-		 	done
-			tableMenu
-		fi
-  	else
-		echo "Table Not Exist 🤬️👊️";
-        	tableMenu ;
-  	fi
-}
-
-function updateTable {
-	read -p "Enter Table Name ➡️  " TableName
- 
-	read -p "Enter Column Name ➡️  " colName
-
-	ColNum=` awk -F":" 'NR==1 {for(i=1;i<=NF;i++)
-	{
-		if( $i == "'$colName'" )
-		print i
-	} 
-	}' $TableName`
-
-	if [[ $ColNum == "" ]]
-	then
-		echo "Column Not Found 😥️"
-		echo " "
-		tableMenu
-	else
-		read -p "Enter value you want to change it ➡️  " Val
-		Res=`awk -F":" '{if( $'$ColNum' == "'$Val'" ) print $'$ColNum'}' $TableName`
-
-		if [[ $Res == "" ]]
-		then
-			echo "Value Not Found 😥️"
-			echo " "
-	      		tableMenu
-	    	else
-	    	
-		#set -x
-		read -p "Enter New Value ➡️  " newValue
-		NUM=$(awk 'BEGIN{FS=":"}{if ($'$ColNum' == "'$Val'") print NR}' $TableName)
-		index=0
-		for i in $NUM
-			do
-				sed -i 's/'$Val'/'$newValue'/g' $TableName
-				echo "Row Updated Successfully from $oldValue to $newValue 👍️"
-			 		((index++)) 		
-			 	done
-			#set +x        
-		echo " "
-		tableMenu
-	      	fi
-    	fi
 }
 
 function Query {
