@@ -478,33 +478,61 @@ function selectCol {
 
 ##Bouns1
 function Query {
-	c=0
-	echo "enter Query : "
-	read r
-	Dml=`echo $r | cut -d' ' -f1`
-	colN=`echo $r | cut -d' ' -f2`
-	tabN=`echo $r | cut -d' ' -f4`
-	((tabL=`wc -l $tabN | cut -d' ' -f1`-1))
-	if [ $Dml = 'select' ]
-	then
-		if [ -f $tabN ]
-		then #table exists	
-			if [ $colN = 'all' ]	
-		 	then
-				tail -$tabL $tabN
-			else
-				echo lines equal $tabL
-			echo 
-			fi	
+c=0
+echo "enter Query : "
+read r
+CheckOnQuery $r
+Dml=`echo $r | cut -d' ' -f1`
+colN=`echo $r | cut -d' ' -f2`
+syntax=`echo $r | cut -d' ' -f3`
+tabN=`echo $r | cut -d' ' -f4`
+((tabL=`wc -l $tabN | cut -d' ' -f1`-1)) 2> /dev/null
+if [ $Dml = 'select'  ]
+then
+	if [ -f $tabN ]
+	then #table exists	
+		if [ $colN = 'all' ]	
+	 	then
+		tail -$tabL $tabN
+		Query;
 		else
-			echo "table doesn't exist "
-		fi
-	elif [ `echo $r | cut -d: -f1` = 'delete' ]
-	then
-		echo "this is delete" 
-	else 
-		echo "invalid Query"
+			ColNum=`awk -F":"  '{
+
+        for (i=1 ; i<=NF ;i++){
+                if( $i == "'$colN'" ){
+                           print i
+		}
+        }
+
+        }' $tabN`
+
+	awk -F":" '{if( NR!=1 )print $'$ColNum'}' $tabN 
+		Query;
+		fi	
+	else
+	echo "table doesn't exist "
+	Query;
 	fi
+elif [ `echo $r | cut -d: -f1` = 'delete' ]
+then
+echo "this is delete" 
+Query;
+elif [ `echo $r | cut -d: -f1` = 'exit' ]
+then
+tableMenu
+else 
+echo "invalid Query"
+fi
+
+}
+
+function CheckOnQuery {
+chk=$*
+if [ -z `echo $chk | cut -d' ' -f4` ]
+then 
+echo enter a valid Query 
+Query;
+fi
 }
 
 mainMenu
