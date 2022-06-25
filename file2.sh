@@ -117,11 +117,11 @@ function tableMenu {
 	echo "     Table Menu for Database Management System             "
 	echo "======================================================="
 	echo " "
-	select x in "List Tables" "Create Table" "Drop Table" "Insert into Table" "Select from Table " "Delete from Table" "Update Table" "Exit to Main Menu" "Query Table"
+	select x in "Create Table" "List Tables" "Drop Table" "Insert into Table" "Select from Table " "Delete from Table" "Update Table" "Exit to Main Menu" "Query Table"
 	do
 		case $REPLY in
-   			1)  ls; echo " "; tableMenu;;
-   	 		2)  createTable;;
+   			1)  createTable;;
+   	 		2)  ls; echo " "; tableMenu;;
 	 		3)  dropTable;;
    	 		4)  insertTable;;
    	 		5)  clear; selectMenu;;
@@ -134,6 +134,7 @@ function tableMenu {
 	done
 }
 
+##Bouns2
 function validateType() {
 	if [ -z $1 ]; then
 		return 1
@@ -379,6 +380,7 @@ function deleteFromTable {
         fi   
 }
 
+##Bouns3
 function updateTable {
 	read -p "Table name: " TableName 
 	read -p "Row number: " rowNum
@@ -415,7 +417,6 @@ function selectMenu {
 		case $REPLY in 
 			1) selectAll; break;;
 			2) selectCol; break;;
-			3) selectCondition; break;;
 			4) tableMenu;;
 			5) cd -; clear; mainMenu;; 	
 			*) echo " "; selectMenu;
@@ -424,82 +425,58 @@ function selectMenu {
 }
 
 function selectAll {
-	read -p "Enter Table Name ➡️  " TableName
+	read -p "Enter table name: " TableName
 
-	if [ -f $TableName ]
-	then
-		more $TableName ;
-		selectMenu ;
-		
+	if validate $TableName;
+	then        	
+		if [ -f $TableName ]
+		then
+			cat $TableName ;
+			selectMenu ;
+			echo " "
+		else
+			echo "Table doesn't exist";
+			echo " "
+			selectMenu;
+		fi
 	else
-		echo "Table dosn't exist 🤬️👊️";
-		selectMenu;
-	fi
+                echo "Syntax error, not valid input";
+                echo " "
+                tableMenu
+        fi   
 }
 
 function selectCol {
-	read -p "Enter Table Name ➡️  " TableName
-	if [ -f $TableName ]
-	then
-		read -p "Enter Column Name ➡️  " colName
-	       
-		ColNum=`awk -F":"  'NR==1{
-
-		for (i=1 ; i<=NF ;i++){
-		        if( $i == "'$colName'" ){
-		                   print i
-				}
-		}
-
-		}' $TableName`
-
-		awk -F":" '{print $'$ColNum'}' $TableName 
-		selectMenu ;				   
-	else
-		echo "Table dosn't exist 🤬️👊️";
-		selectMenu;
-	fi
-}
-
-function selectCondition {
-	echo "Select specific column from TABLE Where FIELD(OPERATOR)VALUE ⬇️"
-	read -p "Enter Table Name ➡️  " TableName
-	if [ -f $TableName ]
-	then
-		read -p "Enter required FIELD name ➡️  " field
-		fid=`awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$field'") print i}}}' $TableName`
-		if [[ $fid == "" ]]
+	read -p "Enter table name: " TableName
+	
+	if validate $TableName;
+	then        	
+		if [ -f $TableName ]
 		then
-			echo "Not Found 🤬️👊️"
-			selectMenu 
+			read -p "Enter column name: " colName
+
+			ColNum=` awk -F":" 'NR==1 {for(i=1;i<=NF;i++)
+			{
+				if( $i == "'$colName'" )
+				print i
+			} 
+			}' $TableName`
+
+			awk -F":" 'NR==2 {print $'$ColNum'}' $TableName 
+			selectMenu;				   
 		else
-			read -p "Supported Operators: [==, !=, >, <, >=, <=] Select OPERATOR ➡️   " op
-		    
-			if [[ $op == "==" ]] || [[ $op == "!=" ]] || [[ $op == ">" ]] || [[ $op == "<" ]] || [[ $op == ">=" ]] || [[ $op == "<=" ]]
-			then
-				read -p "Enter required VALUE ➡️  " val
-			    
-				res=`awk 'BEGIN{FS=":"}{if ($'$fid$op$val') print $'$fid'}' $TableName`
-				if [[ $res == "" ]]
-				then
-					echo "Value Not Found 🤬️👊️ "
-					selectMenu
-					
-				else
-					awk 'BEGIN{FS=":"}{if ($'$fid$op$val') print $'$fid'}' $TableName
-					
-				fi
-			else
-				echo "Unsupported Operator😥️"
-				selectMenu
-			fi
+			echo "Table doesn't exist";
+			echo " "
+			selectMenu;
 		fi
-	  else
-	  	echo "Table Not Found 😥️"
-		selectMenu
-	  fi    
+	else
+                echo "Syntax error, not valid input";
+                echo " "
+                tableMenu
+        fi   
 }
 
+##Bouns1
 function Query {
 	c=0
 	echo "enter Query : "
