@@ -454,6 +454,7 @@ function selectCol {
 }
 
 ##Bouns1
+
 function Query {
 c=0
 echo "enter Query : "
@@ -494,10 +495,6 @@ then
 	echo "table doesn't exist "
 	Query;
 	fi
-elif [ `echo $r | cut -d: -f1` = 'delete' 2> /dev/null ] && [ $colN = 'from' 2> /dev/null ] 
-then
-echo "this is delete" 
-Query;
 elif [ `echo $r | cut -d: -f1` = 'exit' 2> /dev/null ]
 then
 tableMenu
