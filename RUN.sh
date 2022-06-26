@@ -232,7 +232,7 @@ function createTable {
 			 	tableMenu
 			fi
 	#meta-data
-	touch .$TableName
+	touch ".$TableName"
 	echo -e "Table name: "$TableName >>.$TableName	
 	echo -e "No of columns: "$col >>.$TableName
 	echo -e $columns  >> .$TableName	
@@ -303,20 +303,28 @@ function insertTable {
 						echo "Syntax error, invalid input type";
 						read -p "$colName ($colType) = " data
 					done
+				else
+					while [[ $data =~ ^[0-9]+$ ]]
+					do
+						echo "Syntax error, invalid input type";
+						read -p "$colName ($colType) = " data
+					done
 				fi
 
 				if [[ $colKey == "PK" ]]
 				then
-				#echo `awk -F":" '{if(NR != 1) print $(('$i'))}' $TableName`
 					while [[ true ]]
 					do
-						if [[ $data =~ ^[`awk -F":" '{if(NR != 1) print $(('$i'-1))}' $TableName`]$ ]]
+					if validate $TableName
+					then
+						if [[ $data =~ ^[`awk -F":" '{if(NR != 1) print $(('$ColNum'))}' $TableName`]$ ]]
 						then
 							echo "Invalid input for primary key"
 						else
 							break;
 						fi
 						read -p "$colName ($colType) = " data
+					fi
 					done
 				fi
 
@@ -329,6 +337,7 @@ function insertTable {
 			done
 			echo $row >> $TableName
 			row=""
+			echo "Row add successfully";
 			echo " "
 			tableMenu	         		
 		else
@@ -387,15 +396,20 @@ function updateTable {
 
 			Val=` awk -F":" 'NR=='$rowNum' {print $'$ColNum'}' $TableName`
 			echo $Val
-
-			colType=`awk -F":" '{if(NR=='rowNum') print $2}' .$TableName`
-			read -p "New value: " newValue
+			if [ $Val == ""]; 
+			then 
+				echo "There is no data to update";
+				echo " "
+				tableMenu
+			fi
+			colType=`awk -F":" '{if(NR=='$rowNum+2') print $2}' .$TableName`
+			read -p "New value: " newValue;
 			if [[ $colType == "Number" ]]
 				then
 					while  [[ $newValue =~ ^[a-z]*$ ]]
 					do
 						echo "Syntax error, invalid input type";
-						read -p "$colName ($colType) = " data
+						read -p "New value: " newValue;
 					done
 				else
 					sed -i -r 's/'$Val'/'$newValue'/g' $TableName
@@ -440,9 +454,16 @@ function selectAll {
 	then        	
 		if [ -f $TableName ]
 		then
-			cat $TableName ;
-			selectMenu ;
-			echo " "
+			if [[ `wc -l < "$TableName"` = 1 ]]
+			then
+				echo "No data yet";
+				echo " "
+				selectMenu;
+			else
+				cat $TableName;
+				selectMenu;
+				echo " "
+			fi
 		else
 			echo "Table doesn't exist";
 			echo " "
@@ -487,60 +508,60 @@ function selectCol {
 
 ##Bouns1
 function Query {
-c=0
-echo "enter Query : "
-read r
-CheckOnQuery $r
-Dml=`echo $r | cut -d' ' -f1`
-colN=`echo $r | cut -d' ' -f2`
-syntax=`echo $r | cut -d' ' -f3`
-tabN=`echo $r | cut -d' ' -f4`
-((tabL=`wc -l $tabN | cut -d' ' -f1`-1)) 2> /dev/null
-if [ $Dml = 'select'  ] && [ $syntax = 'from' ]
-then
-	if [ -f $tabN ]
-	then #table exists	
-		if [ $colN = 'all' ]	
-	 	then
-		tail -$tabL $tabN
-		Query;
-		else
-			ColNum=`awk -F":"  '{
-        for (i=1 ; i<=NF ;i++){
-                if( $i == "'$colN'" ){
-                           print i
+	c=0
+	echo "enter Query : "
+	read r
+	CheckOnQuery $r
+	Dml=`echo $r | cut -d' ' -f1`
+	colN=`echo $r | cut -d' ' -f2`
+	syntax=`echo $r | cut -d' ' -f3`
+	tabN=`echo $r | cut -d' ' -f4`
+	((tabL=`wc -l $tabN | cut -d' ' -f1`-1)) 2> /dev/null
+	if [ $Dml = 'select'  ] && [ $syntax = 'from' ]
+	then
+		if [ -f $tabN ]
+		then #table exists	
+			if [ $colN = 'all' ]	
+		 	then
+			tail -$tabL $tabN
+			Query;
+			else
+				ColNum=`awk -F":"  '{
+		for (i=1 ; i<=NF ;i++){
+		        if( $i == "'$colN'" ){
+		                   print i
+			}
 		}
-        }
-        }' $tabN`
+		}' $tabN`
 
-	awk -F":" '{if( NR!=1 )print $'$ColNum'}' $tabN 2> /dev/null
-		if [ $? != 0 ]
-		then
-		echo "enter a valid column name";
+		awk -F":" '{if( NR!=1 )print $'$ColNum'}' $tabN 2> /dev/null
+			if [ $? != 0 ]
+			then
+			echo "enter a valid column name";
+			fi
+			Query
+			fi	
+		else
+		echo "table doesn't exist "
+		Query;
 		fi
-		Query
-		fi	
-	else
-	echo "table doesn't exist "
-	Query;
+	elif [ `echo $r | cut -d: -f1` = 'exit' 2> /dev/null ]
+	then
+		tableMenu
+	else 
+		echo "invalid Query"
+		Query;
 	fi
-elif [ `echo $r | cut -d: -f1` = 'exit' 2> /dev/null ]
-then
-tableMenu
-else echo "invalid Query"
-Query;
-fi
-
 }
 
 function CheckOnQuery {
-chk=$*
-num=$#
-if [ -z `echo $chk | cut -d' ' -f4` ] || [ $num -gt 4 ]
-then
-echo enter a valid Query 
-Query;
-fi
+	chk=$*
+	num=$#
+	if [ -z `echo $chk | cut -d' ' -f4` ] || [ $num -gt 4 ]
+	then
+		echo enter a valid Query 
+		Query;
+	fi
 }
 
 mainMenu
