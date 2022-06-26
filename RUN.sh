@@ -364,16 +364,34 @@ function insertTable {
 function deleteFromTable {
 	read -p "Table name: " TableName 
 	read -p "Row number: " rowNum
-	let "rowNum += 1"
 	
 	if validate $TableName && validate $rowNum;
 	then        
 		if [ -f $TableName ]
 		then
-			sed  -i ''$rowNum'd' $TableName
-			echo "Row deleted successfully"	 		
-			echo " "
-			tableMenu
+			while [[ true ]]
+			do
+				if numType $rowNum;
+				then
+					break;
+				else 
+					echo "Syntax error, invalid input type";
+					read -p "Row number: " rowNum;
+				fi
+			done
+			let "rowNum += 1"
+			TcolNum=`awk 'END{print NR}' $TableName`
+			if [[ $rowNum < $TcolNum ]]
+			then	
+				sed  -i ''$rowNum'd' $TableName
+				echo "Row deleted successfully"	 		
+				echo " "
+				tableMenu
+			else
+				echo "Row doesn't exist";
+				echo " "
+				tableMenu ;
+	  		fi
 		else
 			echo "Table doesn't exist";
 			echo " "
