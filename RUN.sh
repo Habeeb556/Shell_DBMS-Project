@@ -525,10 +525,11 @@ function selectCol {
 				print i
 			} 
 			}' $TableName`
-			display= `awk -F":" '{if( NR!=1 )print $'$ColNum'}' $TableName 2>/dev/null`
-			if [[ $? == 0 ]]
+			echo $ColNum
+			awk -F":" '{if( NR!=1 )print $'$ColNum'}' $TableName 2> /dev/null;
+			if [[ $? == 0 ]];
 			then	
-				awk -F":" '{if( NR!=1 )print $'$ColNum
+				awk -F":" '{if( NR!=1 )print $'$ColNum'}' $TableName
 				echo " "
 				selectMenu;
 			else
