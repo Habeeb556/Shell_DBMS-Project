@@ -303,13 +303,13 @@ function insertTable {
 					while  [[ $data =~ ^[a-z]*$ ]]
 					do
 						echo "Syntax error, invalid input type";
-						read -p "$colName ($colType) = " data
+						read -p "$colName ($colType): " data
 					done
 				else
 					while [[ $data =~ ^[0-9]+$ ]]
 					do
 						echo "Syntax error, invalid input type";
-						read -p "$colName ($colType) = " data
+						read -p "$colName ($colType): " data
 					done
 				fi
 
@@ -384,46 +384,58 @@ function updateTable {
 	read -p "Row number: " rowNum
 	let "rowNum += 1"
 	read -p "Column name: " colName
-	v=`awk -F":" '{if( $3 == "PK" )print NR} ' .$TableName`
-	if validate $TableName && validate $rowNum;
+	
+	if validate $TableName && validate $rowNum && validate $colName;
 	then        
 		if [ -f $TableName ]
 		then
-			ColNum=` awk -F":" '{for(i=1;i<=NF;i++)
-			{
-				if( $i == "'$colName'" )
-				print i
-			} 
-			}' $TableName`
-
-			Val=` awk -F":" 'NR=='$rowNum' {print $'$ColNum'}' $TableName`
-			if [[ $Val == "" ]]; 
-			then 
-				echo "There is no data to update";
-				echo " "
-				tableMenu
-			fi	
-			colKey=`awk -F":" '{if(NR=='$v') print $3}' .$TableName`
-			if [[ $colKey == 'PK' ]]
-			then
-				echo "Cannot update Primary Key"
-				echo " "
-				tableMenu
-			fi
-			colType=`awk -F":" '{if(NR=='$rowNum+2') print $2}' .$TableName`
-			read -p "New value: " newValue;
-			if [[ $colType == "Number" ]]
+			while [[ true ]]
+			do
+				if varType $colName;
 				then
-					while  [[ $newValue =~ ^[a-z]*$ ]]
-					do
-						echo "Syntax error, invalid input type";
-						read -p "New value: " newValue;
-					done
-				else
-					sed -i -r 's/'$Val'/'$newValue'/g' $TableName
-					echo "Row updated successfully from $Val to $newValue"	 		
+					break;
+				else 
+					echo "Syntax error, invalid input type";
+					read -p "Column name: " colName;
+				fi
+			done
+			ColNum=`awk -F":" '{for(i=1;i<=NF;i++){if( $i == "'$colName'" )print i}}' $TableName`
+			Val=`awk -F":" 'NR=='$rowNum' {print $'$ColNum'}' $TableName 2>/dev/null`
+			if [[ $? == 0 ]]
+			then
+				if [[ $Val == " " ]]; 
+				then 
+					echo "There is no data to update";
 					echo " "
 					tableMenu
+				fi	
+				v=`awk -F":" '{if( $3 == "PK" ) print NR}' .$TableName`
+				colKey=`awk -F":" '{if(NR=='$v') print $3}' .$TableName`
+				if [[ $colKey == 'PK' ]]
+				then
+					echo "Cannot update Primary Key"
+					echo " "
+					tableMenu
+				fi
+				colType=`awk -F":" '{if(NR=='$rowNum+2') print $2}' .$TableName`
+				read -p "New value: " newValue;
+				if [[ $colType == "Number" ]]
+					then
+						while  [[ $newValue =~ ^[a-z]*$ ]]
+						do
+							echo "Syntax error, invalid input type";
+							read -p "New value: " newValue;
+						done
+					else
+						sed -i -r 's/'$Val'/'$newValue'/g' $TableName
+						echo "Row updated successfully from $Val to $newValue"	 		
+						echo " "
+						tableMenu
+				fi
+			else
+				echo "Something wrong, try again";
+				echo " "
+				tableMenu
 			fi
 		else
 			echo "Table doesn't exist";
@@ -469,8 +481,8 @@ function selectAll {
 				selectMenu;
 			else
 				cat $TableName;
-				selectMenu;
 				echo " "
+				selectMenu;
 			fi
 		else
 			echo "Table doesn't exist";
