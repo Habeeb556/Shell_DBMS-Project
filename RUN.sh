@@ -529,7 +529,6 @@ function selectCol {
 			awk -F":" '{if( NR!=1 )print $'$ColNum'}' $TableName 2> /dev/null;
 			if [[ $? == 0 ]];
 			then	
-				awk -F":" '{if( NR!=1 )print $'$ColNum'}' $TableName
 				echo " "
 				selectMenu;
 			else
