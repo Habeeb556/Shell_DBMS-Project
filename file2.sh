@@ -236,6 +236,7 @@ function dropTable {
 		if [ -f $TableName ]
 		then
 			rm -i $TableName ;
+			rm -i .$TableName ;
 			tableMenu;
 		else
 			echo "Table doesn't exist";
