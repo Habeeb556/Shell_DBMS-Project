@@ -136,7 +136,7 @@ function tableMenu {
 
 ##Bouns2
 function numType() {
-	if [[ $1 =~ [0-9] ]]; then
+	if [[ $1 =~ ^[0-9]+$ ]]; then
 		return 0
 	else 
    		return 1
@@ -300,11 +300,15 @@ function insertTable {
 				
 				if [[ $colType == "Number" ]]
 				then
-					while  [[ $data =~ ^[a-z]*$ ]]
+					while  [[ true ]]					
 					do
-						echo "Syntax error, invalid input type";
-						read -p "$colName ($colType): " data
-					done
+						if numType $data;
+						then break;
+						else
+							echo "Syntax error, invalid input type";
+							read -p "$colName ($colType): " data
+						fi						
+						done
 				else
 					while [[ $data =~ ^[0-9]+$ ]]
 					do
@@ -344,6 +348,7 @@ function insertTable {
 			tableMenu	         		
 		else
 			echo "Table doesn't exist";
+			echo " "
 			tableMenu;
 		fi
 	else
@@ -492,7 +497,7 @@ function selectAll {
 	else
                 echo "Syntax error, not valid input";
                 echo " "
-                tableMenu
+                selectMenu
         fi   
 }
 
@@ -504,16 +509,33 @@ function selectCol {
 		if [ -f $TableName ]
 		then
 			read -p "Column name: " colName
-
+			while [[ true ]]
+			do
+				if varType $colName;
+				then
+					break;
+				else 
+					echo "Syntax error, invalid input type";
+					read -p "Column name: " colName;
+				fi
+			done
 			ColNum=` awk -F":" '{for(i=1;i<=NF;i++)
 			{
 				if( $i == "'$colName'" )
 				print i
 			} 
 			}' $TableName`
-
-			awk -F":" '{if( NR!=1 )print $'$ColNum'}' $TableName 
-			selectMenu;				   
+			display= `awk -F":" '{if( NR!=1 )print $'$ColNum'}' $TableName 2>/dev/null`
+			if [[ $? == 0 ]]
+			then	
+				awk -F":" '{if( NR!=1 )print $'$ColNum
+				echo " "
+				selectMenu;
+			else
+				echo "Something wrong, try again";
+				echo " "
+				selectMenu
+			fi				   
 		else
 			echo "Table doesn't exist";
 			echo " "
@@ -522,7 +544,7 @@ function selectCol {
 	else
                 echo "Syntax error, not valid input";
                 echo " "
-                tableMenu
+                selectMenu
         fi   
 }
 
