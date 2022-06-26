@@ -258,11 +258,14 @@ function dropTable {
 	then        
 		if [ -f $TableName ]
 		then
-			rm -i $TableName;
-			rm -i .$TableName;
+			rm -f $TableName;
+			rm -f .$TableName;
+			echo "tables removed successfully"
+			echo " "
 			tableMenu;
 		else
 			echo "Table doesn't exist";
+			echo " "
 			tableMenu;
 		fi
 	else
@@ -325,7 +328,7 @@ function insertTable {
 					then
 						if [[ $data =~ ^[`awk -F":" '{if(NR != 1) print $(('$ColNum'))}' $TableName`]$ ]]
 						then
-							echo "Invalid input for primary key"
+							echo "Duplicate entry for key (PRIMARY)"
 						else
 							break;
 						fi
@@ -387,13 +390,22 @@ function deleteFromTable {
 function updateTable {
 	read -p "Table name: " TableName 
 	read -p "Row number: " rowNum
-	let "rowNum += 1"
 	read -p "Column name: " colName
 	
 	if validate $TableName && validate $rowNum && validate $colName;
 	then        
 		if [ -f $TableName ]
 		then
+			while [[ true ]]
+			do
+				if numType $rowNum;
+				then
+					break;
+				else 
+					echo "Syntax error, invalid input type";
+					read -p "Row number: " rowNum;
+				fi
+			done
 			while [[ true ]]
 			do
 				if varType $colName;
@@ -404,6 +416,7 @@ function updateTable {
 					read -p "Column name: " colName;
 				fi
 			done
+			let "rowNum += 1"
 			ColNum=`awk -F":" '{for(i=1;i<=NF;i++){if( $i == "'$colName'" )print i}}' $TableName`
 			Val=`awk -F":" 'NR=='$rowNum' {print $'$ColNum'}' $TableName 2>/dev/null`
 			if [[ $? == 0 ]]
@@ -414,29 +427,39 @@ function updateTable {
 					echo " "
 					tableMenu
 				fi	
-				v=`awk -F":" '{if( $3 == "PK" ) print NR}' .$TableName`
-				colKey=`awk -F":" '{if(NR=='$v') print $3}' .$TableName`
+				colRow=`awk -F: '{if ($1=="'$colName'") print NR}' .$TableName`
+				colKey=`awk -F":" '{if(NR=='$colRow') print $3}' .$TableName`
 				if [[ $colKey == 'PK' ]]
 				then
-					echo "Cannot update Primary Key"
+					echo "Cannot update Primary Key Field"
 					echo " "
 					tableMenu
 				fi
 				colType=`awk -F":" '{if(NR=='$rowNum+2') print $2}' .$TableName`
 				read -p "New value: " newValue;
+				
 				if [[ $colType == "Number" ]]
-					then
-						while  [[ $newValue =~ ^[a-z]*$ ]]
-						do
+				then
+					while  [[ true ]]					
+					do
+						if numType $newValue;
+						then break;
+						else
 							echo "Syntax error, invalid input type";
-							read -p "New value: " newValue;
-						done
-					else
-						sed -i -r 's/'$Val'/'$newValue'/g' $TableName
-						echo "Row updated successfully from $Val to $newValue"	 		
-						echo " "
-						tableMenu
+							read -p "New value instead of['$Val']: " newValue;
+						fi						
+					done
+				else
+					while [[ $newValue =~ ^[0-9]+$ ]]
+					do
+						echo "Syntax error, invalid input type";
+						read -p "New value instead of['$Val']: " newValue;
+					done
 				fi
+				sed -i -r 's/'$Val'/'$newValue'/g' $TableName
+				echo "Row updated successfully from $Val to $newValue"	 		
+				echo " "
+				tableMenu
 			else
 				echo "Something wrong, try again";
 				echo " "
@@ -525,7 +548,6 @@ function selectCol {
 				print i
 			} 
 			}' $TableName`
-			echo $ColNum
 			awk -F":" '{if( NR!=1 )print $'$ColNum'}' $TableName 2> /dev/null;
 			if [[ $? == 0 ]];
 			then	
