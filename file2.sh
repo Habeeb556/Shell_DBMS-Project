@@ -456,7 +456,7 @@ function selectCol {
 ##Bouns1
 function Query {
 c=0
-echo "Enter your query: "
+echo "enter Query : "
 read r
 CheckOnQuery $r
 Dml=`echo $r | cut -d' ' -f1`
@@ -464,7 +464,7 @@ colN=`echo $r | cut -d' ' -f2`
 syntax=`echo $r | cut -d' ' -f3`
 tabN=`echo $r | cut -d' ' -f4`
 ((tabL=`wc -l $tabN | cut -d' ' -f1`-1)) 2> /dev/null
-if [ $Dml = 'select'  ]
+if [ $Dml = 'select'  ] && [ $syntax = 'from' ]
 then
 	if [ -f $tabN ]
 	then #table exists	
@@ -483,30 +483,35 @@ then
 
         }' $tabN`
 
-	awk -F":" '{if( NR!=1 )print $'$ColNum'}' $tabN 
-		Query;
+	awk -F":" '{if( NR!=1 )print $'$ColNum'}' $tabN 2> /dev/null
+		if [ $? != 0 ]
+		then
+		echo "enter a valid column name";
+		fi
+		Query
 		fi	
 	else
 	echo "table doesn't exist "
 	Query;
 	fi
-elif [ `echo $r | cut -d: -f1` = 'delete' ]
+elif [ `echo $r | cut -d: -f1` = 'delete' 2> /dev/null ] && [ $colN = 'from' 2> /dev/null ] 
 then
 echo "this is delete" 
 Query;
-elif [ `echo $r | cut -d: -f1` = 'exit' ]
+elif [ `echo $r | cut -d: -f1` = 'exit' 2> /dev/null ]
 then
 tableMenu
-else 
-echo "invalid Query"
+else echo "invalid Query"
+Query;
 fi
 
 }
 
 function CheckOnQuery {
 chk=$*
-if [ -z `echo $chk | cut -d' ' -f4` ]
-then 
+num=$#
+if [ -z `echo $chk | cut -d' ' -f4` ] || [ $num -gt 4 ]
+then
 echo enter a valid Query 
 Query;
 fi
