@@ -164,7 +164,7 @@ function createTable {
 		else
 			if varType $TableName;
 			then
-				touch $TableName
+				echo ""
 			else
 				echo "Syntax error, it contains an illegal character"
 			     	echo " "
@@ -226,20 +226,22 @@ function createTable {
 					 	tableMenu
 					fi
 		    		done
+				touch $TableName
+				#meta-data
+				touch ".$TableName"
+				echo -e "Table name: "$TableName >>.$TableName	
+				echo -e "No of columns: "$col >>.$TableName
+				echo -e $columns  >> .$TableName	
+				echo -e $temp >> $TableName
+				echo "Table $TableName created successfully";		 
+    				echo " "
+ 				tableMenu
 			else
 				echo "Syntax error, it contains an illegal character"
 			     	echo " "
 			 	tableMenu
 			fi
-	#meta-data
-	touch ".$TableName"
-	echo -e "Table name: "$TableName >>.$TableName	
-	echo -e "No of columns: "$col >>.$TableName
-	echo -e $columns  >> .$TableName	
-	echo -e $temp >> $TableName
-	echo "Table $TableName created successfully";		 
-    	echo " "
- 	tableMenu
+	
 	
 	fi
 	        else
@@ -382,7 +384,7 @@ function updateTable {
 	read -p "Row number: " rowNum
 	let "rowNum += 1"
 	read -p "Column name: " colName
-
+	v=`awk -F":" '{if( $3 == "PK" )print NR} ' .$TableName`
 	if validate $TableName && validate $rowNum;
 	then        
 		if [ -f $TableName ]
@@ -395,10 +397,16 @@ function updateTable {
 			}' $TableName`
 
 			Val=` awk -F":" 'NR=='$rowNum' {print $'$ColNum'}' $TableName`
-			echo $Val
-			if [ $Val == ""]; 
+			if [[ $Val == "" ]]; 
 			then 
 				echo "There is no data to update";
+				echo " "
+				tableMenu
+			fi	
+			colKey=`awk -F":" '{if(NR=='$v') print $3}' .$TableName`
+			if [[ $colKey == 'PK' ]]
+			then
+				echo "Cannot update Primary Key"
 				echo " "
 				tableMenu
 			fi
